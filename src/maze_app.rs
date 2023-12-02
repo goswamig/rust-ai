@@ -1,6 +1,7 @@
 use iced::{
     Application, Command, Element, Length, Subscription,
     widget::{Button, Column, Container, Row, Text},
+    Color,
     executor::Default as DefaultExecutor,
     Clipboard,
 };
@@ -24,7 +25,6 @@ impl Application for MazeApp {
     type Executor = DefaultExecutor;
     type Message = Message;
     type Flags = ();
-    //type Theme = (); // If `Theme` is not used, you can simply set it to `()`
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
         (
@@ -58,7 +58,7 @@ impl Application for MazeApp {
         
         let mut column = Column::new()
             .push(
-                Button::new(&mut self.start_button, Text::new("Start"))
+                Button::new(&mut self.start_button, Text::new("Step"))
                     .on_press(Message::StartPressed),
             );
 
@@ -67,9 +67,9 @@ impl Application for MazeApp {
                 let mut row = Row::new();
                 for y in 0..GRID_SIZE {
                     let cell_text = if self.maze_solver.obstacles.contains(&(x, y)) {
-                        Text::new("O") // Red for obstacles
+                        Text::new("O").color(Color::from_rgb(1.0, 0.0, 0.0)) // Red for obstacles
                     } else if (x, y) == self.maze_solver.current_state {
-                        Text::new("A") // Green for the agent
+                        Text::new("A").color(Color::from_rgb(0.0, 1.0, 0.0)) // Green for the agent
                     } else {
                         let symbol = if self.maze_solver.path.contains(&(x, y)) { "*" } else { "." };
                         Text::new(symbol) // Blue for the path
