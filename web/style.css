@@ -1,0 +1,106 @@
+/* Use flexbox to center the content vertically and horizontally */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Use the full viewport height */
+    margin: 0; /* Remove default margin */
+    font-family: Arial, sans-serif;
+}
+
+.wrapper {
+    display: grid;
+    grid-template-columns: auto auto; /* Define two columns */
+    gap: 50px; /* Increase gap between maze and Q-table */
+    align-items: start; /* Align the start of the items */
+    justify-content: center; /* Center the items horizontally */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Additional styles for each section */
+.maze-section, .q-table-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center-align the items in the column */
+}
+
+/* Label styles */
+.label {
+    font-weight: bold;
+    margin-bottom: 10px; /* Add some space below the label */
+}
+
+/* Maze container styles */
+#maze-container {
+    width: 250px; /* Set a fixed width */
+    height: 250px; /* Set a fixed height */
+    border: 2px solid black;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    margin-bottom: 20px; /* Add space below the maze */
+}
+
+/* Q-table styles */
+.q-table {
+    width: auto; /* Adjust width as needed */
+    overflow: auto;
+}
+
+/* Table styles */
+.q-table table {
+    border-collapse: collapse;
+    margin-bottom: 20px; /* Add space below the Q-table */
+}
+
+.q-table th, .q-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.current-state {
+    background-color: #FFFF99; /* Highlight color for the current state */
+    font-weight: bold;
+}
+
+/* Add your existing styles here */
+
+#status-message {
+    text-align: center;
+    margin-bottom: 10px;
+    color: blue;
+    font-weight: bold;
+}
+
+button:disabled {
+    background-color: #ccc;
+    color: #666;
+}
+
+/* Add styles to highlight the current state cell in the Q-table */
+.q-table td[data-state] {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.q-table td.current-state {
+    background-color: #FFFF99;
+    font-weight: bold;
+}
+
+
+/* Cell styles */
+.cell {
+    width: 50px; height: 50px;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Styles for agent, obstacle, and goal cells */
+.agent { background-color: green; }
+.obstacle { background-color: red; }
+.goal { background-color: gold; }
