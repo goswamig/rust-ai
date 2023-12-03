@@ -149,6 +149,8 @@ impl MazeSolver {
 
         self.current_state = next_state; // Update current_state
         self.path.push(next_state); // Add to path
+        println!("Updated Q-value for state {:?} and action {:?}: {}", self.current_state, action, *q_value);
+
         return false; 
     }
 

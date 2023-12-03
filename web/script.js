@@ -1,4 +1,4 @@
-console.log("Script running"); 
+console.log("Script running");
 document.getElementById('step-btn').addEventListener('click', makeMove);
 document.getElementById('reset-btn').addEventListener('click', resetMaze);
 
@@ -6,40 +6,54 @@ let qTableData = [];
 let currentAgentState = null;
 
 function makeMove() {
-    console.log("Script running makeMove"); 
+    console.log("makeMove called");
 
     fetch('/maze/step', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-            updateMazeDisplay(data[0]);
+            console.log("Data received from /maze/step", data);
+            console.log("Received Q-table data:", data[2]);
+
+            updateMazeDisplay(data[0]); // Update maze display with the new state
             currentAgentState = data[0].agent[0]; // Update the current agent state
+
+            // Check if the game is over
             if (data[1] === "Game over") {
                 document.getElementById('status-message').textContent = "Game over";
                 document.getElementById('step-btn').disabled = true;
             }
 
-            updateQTable(data[2]); // Assuming the Q-table data comes in the third index
+            // Check if the Q-table data is present and is an array
+            if(Array.isArray(data[2])) {
+                qTableData = data[2]; // Update the global qTableData with the new data
+                updateQTable(qTableData); // Update the Q-table display
+            } else {
+                console.error('Received non-array Q-Table Data:', data[2]);
+            }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error during makeMove:', error));
 }
 
+
+
 function resetMaze() {
-    console.log("Script running resetMaze"); 
+    console.log("resetMaze called");
 
     fetch('/maze/reset', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
+            console.log("Data received from /maze/reset", data);
             updateMazeDisplay(data);
             document.getElementById('status-message').textContent = "Maze reset";
             document.getElementById('step-btn').disabled = false;
-            currentAgentState = data.agent[0]; // Reset the current agent state
+            currentAgentState = data.agent[0];
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error during resetMaze:', error));
 }
 
-function updateMazeDisplay(mazeData) {
-    console.log("Script running updateMazeDisplay"); 
 
+function updateMazeDisplay(mazeData) {
+    console.log("updateMazeDisplay called with data:", mazeData);
 
     const mazeContainer = document.getElementById('maze-container');
     mazeContainer.innerHTML = ''; // Clear existing maze
@@ -64,8 +78,13 @@ function updateMazeDisplay(mazeData) {
     updateQTable(qTableData);
 }
 
-function updateQTable(qTableData) {
-    console.log("Script running updateQTable"); 
+function updateQTable(qTable) {
+    console.log("updateQTable called with data:", qTable);
+
+    if (!Array.isArray(qTable)) {
+        console.error('updateQTable was passed a non-array value', qTable);
+        return; // Exit the function early
+    }
 
     const qTableContainer = document.getElementById('q-table'); // Updated container ID
     qTableContainer.innerHTML = ''; // Clear existing Q-value table
@@ -116,18 +135,18 @@ function updateQTable(qTableData) {
 }
 
 
-// Add a global variable to store the Q-table data
-// let qTableData = [];
 
 // Call updateMazeDisplay and updateQTable on page load
 window.onload = function() {
+    console.log("window.onload called");
     fetch('/state')
         .then(response => response.json())
         .then(data => {
+            console.log("Data received from /state", data);
             updateMazeDisplay(data[0]);
-            qTableData = data[1]; // Store Q-table data in the global variable
+            qTableData = data[1];
             updateQTable(qTableData);
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error during window.onload:', error));
 };
 
