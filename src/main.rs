@@ -1,21 +1,27 @@
 use warp::Filter;
-use warp::cors;
-
-use std::sync::{Arc, Mutex};
-use warp::http::Response;
-use serde::Serialize; // Add this import for serialization
+use tokio::sync::{broadcast, Mutex};
+use std::sync::Arc;
 
 mod maze_solver;
 mod web_app;
 use web_app::{routes, AppState};
 
+
 #[tokio::main]
 async fn main() {
-    let solver = maze_solver::MazeSolver::new();
+    let (update_tx, _) = broadcast::channel(32); // Change to broadcast channel
+    let solver = maze_solver::MazeSolver::new(update_tx.clone()); // Clone here
     let state = AppState {
-        solver: Mutex::new(solver),
+        solver: Arc::new(Mutex::new(solver)),
     };
     let shared_state = Arc::new(state);
+
+    let solver_clone = shared_state.clone();
+    let update_tx_clone = update_tx.clone();
+    tokio::spawn(async move {
+        let mut solver = solver_clone.solver.lock().await;
+        solver.run().await;
+    });
 
     // Serve static files from the "web" directory
     let web_dir = warp::path("web").and(warp::fs::dir("./web"));
@@ -25,7 +31,7 @@ async fn main() {
         .allow_headers(vec!["*"])
         .allow_methods(vec!["GET", "POST", "DELETE", "PUT", "OPTIONS"]);
 
-    let routes = routes(shared_state.clone()).with(cors);
+    let routes = routes(shared_state.clone(), update_tx).with(cors);
 
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }

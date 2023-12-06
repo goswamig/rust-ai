@@ -1,6 +1,7 @@
 console.log("Script running");
 document.getElementById('step-btn').addEventListener('click', makeMove);
 document.getElementById('reset-btn').addEventListener('click', resetMaze);
+document.getElementById('simulate-btn').addEventListener('click', simulateGame);
 
 let qTableData = [];
 let currentAgentState = null;
@@ -34,6 +35,72 @@ function makeMove() {
         .catch(error => console.error('Error during makeMove:', error));
 }
 
+function startSimulation() {
+    const ws = new WebSocket('ws://localhost:3030/ws');
+
+    ws.onopen = function() {
+        console.log('WebSocket connection established');
+    };
+
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        updateMazeDisplay(data.current_state);
+        qTableData = formatQTableData(data.q_table); // Assuming a function to format Q-table data
+        updateQTable(qTableData);
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+}
+
+function formatQTableData(rawData) {
+    // Create an object to hold the aggregated Q-values for each state
+    const formattedData = {};
+
+    // Iterate over each entry in the raw Q-table data
+    for (const [key, value] of Object.entries(rawData)) {
+        const [x, y, action] = key.split(',').map(Number); // Extract state and action
+
+        // Initialize state in formattedData if it doesn't exist
+        if (!formattedData[`${x},${y}`]) {
+            formattedData[`${x},${y}`] = {
+                state: [x, y],
+                q_values: [null, null, null, null] // Placeholder for 4 actions
+            };
+        }
+
+        // Map the action to an index (assuming the order Up, Down, Left, Right)
+        const actionIndex = {
+            'Up': 0,
+            'Down': 1,
+            'Left': 2,
+            'Right': 3
+        }[action];
+
+        // Assign the Q-value to the correct action in the formattedData
+        formattedData[`${x},${y}`].q_values[actionIndex] = value;
+    }
+
+    // Convert the formattedData object back into an array
+    return Object.values(formattedData);
+}
+
+
+function simulateGame() {
+    console.log("Simulate game called");
+
+    // Send a request to the new simulation endpoint
+    fetch('/maze/simulate', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Data received from /maze/simulate", data);
+            updateMazeDisplay(data.currentMazeState); // Assuming the API returns the final state of the maze
+            qTableData = data.qTable; // Assuming the API returns the final Q-table
+            updateQTable(qTableData);
+        })
+        .catch(error => console.error('Error during simulation:', error));
+}
 
 
 function resetMaze() {

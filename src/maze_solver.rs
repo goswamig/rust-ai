@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 use rand::{Rng, seq::SliceRandom};
-// In maze_solver.rs
 use rand::rngs::StdRng;
-use rand::{SeedableRng};
+use rand::SeedableRng;
+use serde::{Serialize, Deserialize};
+use tokio::sync::{mpsc, Mutex};
+use tokio::sync::broadcast;
+
+
 
 // Environment settings   
 pub const GRID_SIZE: usize = 5;
@@ -13,12 +17,16 @@ const GAMMA: f64 = 0.9;
 const EPSILON: f64 = 0.1;
 const EPISODES: usize = 1000;
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Hash, Eq, PartialEq, Debug, Clone, Copy)]
 pub enum Action {
-    Up,
-    Down,
-    Left,
-    Right,
+    Up, Down, Left, Right,
+}
+
+// Define a struct for updates
+#[derive(Serialize, Clone)]
+pub struct MazeUpdate {
+    pub current_state: HashMap<String, Vec<(usize, usize)>>,
+    pub q_table: HashMap<(usize, usize, Action), f64>,
 }
 
 pub struct MazeSolver {
@@ -30,11 +38,11 @@ pub struct MazeSolver {
     rng: StdRng,
     pub current_state: (usize, usize),
     pub path: Vec<(usize, usize)>, // Track the path taken by the agent
-
+    pub update_tx: broadcast::Sender<MazeUpdate>,  // change here
 }
 
 impl MazeSolver {
-    pub fn new() -> Self {
+    pub fn new(update_tx: broadcast::Sender<MazeUpdate>) -> Self {
         let states: Vec<(usize, usize)> = (0..GRID_SIZE)
             .flat_map(|x| (0..GRID_SIZE).map(move |y| (x, y)))
             .collect();
@@ -59,7 +67,7 @@ impl MazeSolver {
             rng: StdRng::from_entropy(),
             current_state: (0, 0), // Initialize current_state
             path: Vec::new(), // Initialize path
-
+            update_tx,
         }
     }
 
@@ -68,12 +76,17 @@ impl MazeSolver {
         &self.states
     }
 
+        // Add a public method to access update_tx if needed
+        pub fn get_update_tx(&self) -> &broadcast::Sender<MazeUpdate> {
+            &self.update_tx
+        }
+
     // Add a getter method for actions
     pub fn get_actions(&self) -> &Vec<Action> {
         &self.actions
     }
 
-    pub fn run(&mut self) {
+    pub async fn run(&mut self) {
         for _ in 0..EPISODES {
             self.current_state = (0, 0); // Start state
             while self.current_state != self.goal {    
@@ -99,9 +112,20 @@ impl MazeSolver {
                 *q_value += ALPHA * (reward + GAMMA * next_max - *q_value);
 
                 self.current_state = next_state;
+
+                // After making a move, send an update
+                let update = MazeUpdate {
+                    current_state: self.get_current_state(),
+                    q_table: self.get_q_values(),
+                };
+                let _ = self.update_tx.send(update);  // change here, broadcast channels don't need await
+            
             }
         }
     }
+
+
+
 
     pub fn reset(&mut self) {
         self.current_state = (0, 0); // Reset to start
