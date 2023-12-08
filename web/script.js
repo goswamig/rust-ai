@@ -36,6 +36,8 @@ function makeMove() {
 }
 
 function startSimulation() {
+    console.log("startSimulation  called");
+
     const ws = new WebSocket('ws://localhost:3030/ws');
 
     ws.onopen = function() {
@@ -54,35 +56,61 @@ function startSimulation() {
     };
 }
 
+// function formatQTableData(rawData) {
+//     // Create an object to hold the aggregated Q-values for each state
+//     const formattedData = {};
+
+//     // Iterate over each entry in the raw Q-table data
+//     for (const [key, value] of Object.entries(rawData)) {
+//         const [x, y, action] = key.split(',').map(Number); // Extract state and action
+
+//         // Initialize state in formattedData if it doesn't exist
+//         if (!formattedData[`${x},${y}`]) {
+//             formattedData[`${x},${y}`] = {
+//                 state: [x, y],
+//                 q_values: [null, null, null, null] // Placeholder for 4 actions
+//             };
+//         }
+
+//         // Map the action to an index (assuming the order Up, Down, Left, Right)
+//         const actionIndex = {
+//             'Up': 0,
+//             'Down': 1,
+//             'Left': 2,
+//             'Right': 3
+//         }[action];
+
+//         // Assign the Q-value to the correct action in the formattedData
+//         // formattedData[`${x},${y}`].q_values[actionIndex] = value;
+//         formattedData[`${x},${y}`].q_values[actionIndex] = value ?? null; // Use null-coalescing for safety
+//     }
+
+//     // Convert the formattedData object back into an array
+//     return Object.values(formattedData);
+// }
+
 function formatQTableData(rawData) {
-    // Create an object to hold the aggregated Q-values for each state
     const formattedData = {};
+    const actionMap = ['Up', 'Down', 'Left', 'Right'];
 
-    // Iterate over each entry in the raw Q-table data
     for (const [key, value] of Object.entries(rawData)) {
-        const [x, y, action] = key.split(',').map(Number); // Extract state and action
+        const [x, y, actionNum] = key.split(',').map(Number);
 
-        // Initialize state in formattedData if it doesn't exist
         if (!formattedData[`${x},${y}`]) {
             formattedData[`${x},${y}`] = {
                 state: [x, y],
-                q_values: [null, null, null, null] // Placeholder for 4 actions
+                q_values: [null, null, null, null]
             };
         }
 
-        // Map the action to an index (assuming the order Up, Down, Left, Right)
-        const actionIndex = {
-            'Up': 0,
-            'Down': 1,
-            'Left': 2,
-            'Right': 3
-        }[action];
-
-        // Assign the Q-value to the correct action in the formattedData
-        formattedData[`${x},${y}`].q_values[actionIndex] = value;
+        // Map numeric action to string
+        const action = actionMap[actionNum];
+        if(action !== undefined) {
+            const actionIndex = actionMap.indexOf(action);
+            formattedData[`${x},${y}`].q_values[actionIndex] = value;
+        }
     }
 
-    // Convert the formattedData object back into an array
     return Object.values(formattedData);
 }
 
@@ -90,17 +118,39 @@ function formatQTableData(rawData) {
 function simulateGame() {
     console.log("Simulate game called");
 
-    // Send a request to the new simulation endpoint
-    fetch('/maze/simulate', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Data received from /maze/simulate", data);
-            updateMazeDisplay(data.currentMazeState); // Assuming the API returns the final state of the maze
-            qTableData = data.qTable; // Assuming the API returns the final Q-table
-            updateQTable(qTableData);
-        })
-        .catch(error => console.error('Error during simulation:', error));
+    // Establish a WebSocket connection
+    const ws = new WebSocket('ws://localhost:3030/maze/simulate');
+
+    ws.onopen = function() {
+        console.log('WebSocket connection established');
+        // Optionally, send a message to the server to start the simulation
+        ws.send(JSON.stringify({ action: 'startSimulation' }));
+    };
+
+    ws.onmessage = function(event) {
+        console.log('WebSocket message received:', event.data); // Log incoming message
+
+        const data = JSON.parse(event.data);
+        updateMazeDisplay(data.current_state); // Update maze display with the new state
+        qTableData = formatQTableData(data.q_table); // Format and update the Q-table display
+        updateQTable(qTableData);
+
+        // Check if the game is over
+        if (data.game_over) {
+            console.log('Simulation complete');
+            ws.close(); // Close the WebSocket connection
+        }
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
 }
+
 
 
 function resetMaze() {
@@ -183,7 +233,7 @@ function updateQTable(qTable) {
 
         for (const qValue of qTableEntry.q_values) { // Updated key to q_values
             const qValueCell = document.createElement('td');
-            qValueCell.textContent = qValue.toFixed(2);
+            qValueCell.textContent = qValue !== null ? qValue.toFixed(2) : 'N/A';
             stateRow.appendChild(qValueCell);
         }
 
