@@ -56,38 +56,6 @@ function startSimulation() {
     };
 }
 
-// function formatQTableData(rawData) {
-//     // Create an object to hold the aggregated Q-values for each state
-//     const formattedData = {};
-
-//     // Iterate over each entry in the raw Q-table data
-//     for (const [key, value] of Object.entries(rawData)) {
-//         const [x, y, action] = key.split(',').map(Number); // Extract state and action
-
-//         // Initialize state in formattedData if it doesn't exist
-//         if (!formattedData[`${x},${y}`]) {
-//             formattedData[`${x},${y}`] = {
-//                 state: [x, y],
-//                 q_values: [null, null, null, null] // Placeholder for 4 actions
-//             };
-//         }
-
-//         // Map the action to an index (assuming the order Up, Down, Left, Right)
-//         const actionIndex = {
-//             'Up': 0,
-//             'Down': 1,
-//             'Left': 2,
-//             'Right': 3
-//         }[action];
-
-//         // Assign the Q-value to the correct action in the formattedData
-//         // formattedData[`${x},${y}`].q_values[actionIndex] = value;
-//         formattedData[`${x},${y}`].q_values[actionIndex] = value ?? null; // Use null-coalescing for safety
-//     }
-
-//     // Convert the formattedData object back into an array
-//     return Object.values(formattedData);
-// }
 
 function formatQTableData(rawData) {
     const formattedData = {};
@@ -128,7 +96,7 @@ function simulateGame() {
     };
 
     ws.onmessage = function(event) {
-        console.log('WebSocket message received:', event.data); // Log incoming message
+        //console.log('WebSocket message received:', event.data); // Log incoming message
 
         const data = JSON.parse(event.data);
         updateMazeDisplay(data.current_state); // Update maze display with the new state
@@ -170,7 +138,7 @@ function resetMaze() {
 
 
 function updateMazeDisplay(mazeData) {
-    console.log("updateMazeDisplay called with data:", mazeData);
+   // console.log("updateMazeDisplay called with data:", mazeData);
 
     const mazeContainer = document.getElementById('maze-container');
     mazeContainer.innerHTML = ''; // Clear existing maze
@@ -250,8 +218,6 @@ function updateQTable(qTable) {
         }
     }    
 }
-
-
 
 // Call updateMazeDisplay and updateQTable on page load
 window.onload = function() {

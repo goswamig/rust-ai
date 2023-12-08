@@ -1,106 +1,106 @@
-/* Use flexbox to center the content vertically and horizontally */
+/* General Styles */
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; /* Use the full viewport height */
-    margin: 0; /* Remove default margin */
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
 }
 
 .wrapper {
-    display: grid;
-    grid-template-columns: auto auto; /* Define two columns */
-    gap: 50px; /* Increase gap between maze and Q-table */
-    align-items: start; /* Align the start of the items */
-    justify-content: center; /* Center the items horizontally */
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-/* Additional styles for each section */
-.maze-section, .q-table-section {
+    max-width: 1200px;
+    margin: 3rem auto;
+    padding: 1rem;
     display: flex;
-    flex-direction: column;
-    align-items: center; /* Center-align the items in the column */
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Label styles */
+.maze-section, .q-table-section {
+    margin: 1rem;
+}
+
 .label {
-    font-weight: bold;
-    margin-bottom: 10px; /* Add some space below the label */
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    color: #555;
 }
 
-/* Maze container styles */
+/* Maze Styles */
 #maze-container {
-    width: 250px; /* Set a fixed width */
-    height: 250px; /* Set a fixed height */
-    border: 2px solid black;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    margin-bottom: 20px; /* Add space below the maze */
+    grid-template-columns: repeat(5, 50px);
+    grid-template-rows: repeat(5, 50px);
+    border: 2px solid black; /* Add outer boundary black border */
+    gap: 1px;
+    justify-content: center;
+    align-items: center;
+    background-color: black; /* This will fill the gaps with black color */
 }
 
-/* Q-table styles */
+.cell {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    background-color: white; /* Set cell background to white or any other color */
+}
+
+.agent {
+    background-color: #2196F3; /* Change agent color to blue */
+}
+
+.obstacle {
+    background-color: #F44336; /* A brighter shade of red */
+}
+
+.goal {
+    background-color: #008080; /* Goal color changed to a dark teal */
+}
+
+/* Q-Table Styles */
 .q-table {
-    width: auto; /* Adjust width as needed */
-    overflow: auto;
-}
-
-/* Table styles */
-.q-table table {
-    border-collapse: collapse;
-    margin-bottom: 20px; /* Add space below the Q-table */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .q-table th, .q-table td {
-    padding: 8px;
-    border: 1px solid #ddd;
+    padding: 0.5rem;
     text-align: center;
+    transition: background-color 0.3s;
+}
+
+.q-table th {
+    background-color: #eee;
+}
+
+.q-table td {
+    cursor: pointer;
 }
 
 .current-state {
-    background-color: #FFFF99; /* Highlight color for the current state */
-    font-weight: bold;
+    background-color: #FFC107; /* Highlight the current state */
 }
 
-/* Add your existing styles here */
+/* Button Styles */
+button {
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #2196F3;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
 
-#status-message {
-    text-align: center;
-    margin-bottom: 10px;
-    color: blue;
-    font-weight: bold;
+button:hover {
+    background-color: #1976D2;
 }
 
 button:disabled {
-    background-color: #ccc;
-    color: #666;
+    background-color: #BDBDBD;
+    cursor: not-allowed;
 }
-
-/* Add styles to highlight the current state cell in the Q-table */
-.q-table td[data-state] {
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.q-table td.current-state {
-    background-color: #FFFF99;
-    font-weight: bold;
-}
-
-
-/* Cell styles */
-.cell {
-    width: 50px; height: 50px;
-    border: 1px solid #ddd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Styles for agent, obstacle, and goal cells */
-.agent { background-color: green; }
-.obstacle { background-color: red; }
-.goal { background-color: gold; }

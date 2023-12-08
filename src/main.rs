@@ -10,19 +10,14 @@ mod web_app;
 async fn main() {
     println!("main.rs: Calling main");
 
-    let (update_tx, _) = broadcast::channel(32); // Change to broadcast channel
-    let solver = maze_solver::MazeSolver::new(update_tx.clone()); // Clone here
+    let (update_tx, _) = broadcast::channel(10000); // Change to broadcast channel based on number of updates count
+    let solver = maze_solver::MazeSolver::new(update_tx.clone()); 
     let state = AppState {
         solver: Arc::new(Mutex::new(solver)),
     };
     let shared_state = Arc::new(state);
 
-    //let solver_clone = shared_state.clone();
     let update_tx_clone = update_tx.clone();
-    // tokio::spawn(async move {
-    //     let mut solver = solver_clone.solver.lock().await;
-    //     solver.run().await;
-    // });
 
     // Serve static files from the "web" directory
     let web_dir = warp::path("web").and(warp::fs::dir("./web"));

@@ -18,17 +18,15 @@ const GAMMA: f64 = 0.9;
 const EPSILON: f64 = 0.1;
 const EPISODES: usize = 1000;
 
+// CHANNEL PARAMS
+const BUFFER_SIZE: usize = 32;
+
 #[derive(Serialize, Deserialize, Hash, Eq, PartialEq, Debug, Clone, Copy)]
 pub enum Action {
     Up, Down, Left, Right,
 }
 
-// // Define a struct for updates
-// #[derive(Serialize, Clone, Debug)]
-// pub struct MazeUpdate {
-//     pub current_state: HashMap<String, Vec<(usize, usize)>>,
-//     pub q_table: HashMap<(usize, usize, Action), f64>,
-// }
+
 
 #[derive(Serialize, Clone, Debug)]
 pub struct MazeUpdate {
@@ -86,33 +84,20 @@ impl MazeSolver {
         &self.states
     }
 
-        // Add a public method to access update_tx if needed
-        pub fn get_update_tx(&self) -> &broadcast::Sender<MazeUpdate> {
-            println!("maze_solver.rs: Calling get_update_tx");
-
+    // Add a public method to access update_tx if needed
+    pub fn get_update_tx(&self) -> &broadcast::Sender<MazeUpdate> {
+        println!("maze_solver.rs: Calling get_update_tx");
             &self.update_tx
-        }
+    }
 
     // Add a getter method for actions
     pub fn get_actions(&self) -> &Vec<Action> {
-        //println!("maze_solver.rs: Calling get_actions");
-
         &self.actions
     }
 
     pub async fn run(&mut self) {
         println!("maze_solver.rs: Calling run");
-        //tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-        // Send a static update before starting the algorithm
-        // let static_update = MazeUpdate {
-        //     current_state: self.generate_static_current_state(), // Call a function to generate static current state
-        //     q_table: self.generate_static_q_table(), // Call a function to generate static q_table
-        // };
-        // if let Err(e) = self.update_tx.send(static_update) {
-        //     println!("Failed to send static update: {:?}", e);
-        // }
-
+        let mut update_counts = 0;
         for _ in 0..EPISODES {
             self.current_state = (0, 0); // Start state
             while self.current_state != self.goal {    
@@ -145,20 +130,12 @@ impl MazeSolver {
                     q_table: self.get_q_values(),
                 };
 
-                //Store the return value of send and print it
-                // let send_result = self.update_tx.send(update);
-                // match send_result {
-                //     Ok(num_receivers) => println!("Update sent to {} receivers", num_receivers),
-                //     Err(e) => println!("Failed to send update: {:?}", e),
-                // }
-                //println!("maze_solver.rs: Sending update for state {:?}", self.current_state);
+
                 let _ = self.update_tx.send(update);  // change here, broadcast channels don't need await
-
-                 //delay after sending each update        
-                 //tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
+                update_counts = update_counts +  1
              }
          }
+         println!(" Total number of updates sent are {:?}", update_counts);
     }
 
 
@@ -195,7 +172,6 @@ impl MazeSolver {
         q_table
     }
 
-
     pub fn reset(&mut self) {
         println!("maze_solver.rs: Calling reset");
 
@@ -204,15 +180,11 @@ impl MazeSolver {
     }
 
     pub fn get_current_state(&self) -> HashMap<String, Vec<(usize, usize)>> {
-        //println!("maze_solver.rs: Calling get_current_state");
-
         let mut state = HashMap::new();
         state.insert("agent".to_string(), vec![self.current_state]);
         state.insert("obstacles".to_string(), self.obstacles.clone());
         state.insert("goal".to_string(), vec![self.goal]);
         state.insert("path".to_string(), self.path.clone());
-        //println!("Current State: {:?}", state);  // Logging the current state
-
         state
     }
 
@@ -252,18 +224,6 @@ impl MazeSolver {
 
         return false; 
     }
-
-    // pub fn get_q_values(&self) -> HashMap<(usize, usize, Action), f64> {
-    //     //println!("maze_solver.rs: Calling get_q_values");
-
-    //     self.states.iter()
-    //         .flat_map(|&state| {
-    //             self.actions.iter().map(move |&action| {
-    //                 ((state.0, state.1, action), *self.q_table.get(&((state, action))).unwrap_or(&0.0))
-    //             })
-    //         })
-    //         .collect()
-    // }
     
     pub fn get_q_values(&self) -> HashMap<String, f64> {
         let mut q_values = HashMap::new();
@@ -287,8 +247,6 @@ impl MazeSolver {
         q_values
     }
 
-
-
     fn get_next_state(&self, state: (usize, usize), action: Action) -> (usize, usize) {
         //println!("maze_solver.rs: Calling get_next_state");
 
@@ -308,6 +266,4 @@ impl MazeSolver {
         //     next_state
         // }
     }
-
-    // Additional methods or helper functions can be added here if needed
 }
