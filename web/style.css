@@ -48,7 +48,7 @@ body {
 }
 
 .agent {
-    background-color: #2196F3; /* Change agent color to blue */
+    background-color: #ADD8E6; /* Agent color changed to light blue */
 }
 
 .obstacle {
@@ -56,7 +56,7 @@ body {
 }
 
 .goal {
-    background-color: #008080; /* Goal color changed to a dark teal */
+    background-color: #006400; /* Goal color changed to dark green */
 }
 
 /* Q-Table Styles */

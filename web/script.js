@@ -138,7 +138,6 @@ function resetMaze() {
 
 
 function updateMazeDisplay(mazeData) {
-   // console.log("updateMazeDisplay called with data:", mazeData);
 
     const mazeContainer = document.getElementById('maze-container');
     mazeContainer.innerHTML = ''; // Clear existing maze
@@ -152,7 +151,7 @@ function updateMazeDisplay(mazeData) {
                 cell.classList.add('agent');
             } else if (mazeData.obstacles.some(obstacle => obstacle[0] === row && obstacle[1] === col)) {
                 cell.classList.add('obstacle');
-            } else if (mazeData.goal[0] === row && mazeData.goal[1] === col) {
+            } else if (mazeData.goal[0][0] === row && mazeData.goal[0][1] === col) {
                 cell.classList.add('goal');
             }
 
